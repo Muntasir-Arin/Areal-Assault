@@ -1,4 +1,5 @@
 import time
+import freetype
 from OpenGL.GL import *
 from OpenGL.GLUT import *
 from OpenGL.GLU import *
@@ -7,11 +8,15 @@ from math import sin, cos, pi
 from scene import *
 import time
 import math
+from first_window import display_first_screen
+from boxes_screen import display_box
 
 W_Width, W_Height = 1280, 720
 launched = False
-current_scene = 4
+current_scene = 1
 round = 1
+box_choose =2
+
 
 # Constants
 initial_velocity = 65 # Initial velocity of the projectile
@@ -34,6 +39,24 @@ class Ball :
 
 ball= Ball()
 
+face = freetype.Face("ARCADECLASSIC.TTF")
+  # Set the font size
+def render_text(text, x, y, size=24):
+    face.set_char_size(size * 64)
+    for char in text:
+        face.load_char(char)
+        bitmap = face.glyph.bitmap
+        glPointSize(1)
+        glBegin(GL_POINTS)
+        for i in range(bitmap.width):
+            for j in range(bitmap.rows):
+                if ord(char) < 128:
+                    if (bitmap.buffer[j * bitmap.width + i] > 0):
+                        glVertex2f(x + i, y - j)
+        glEnd()
+        # Adjust the position for the next character
+        x += face.glyph.advance.x >> 6
+#------------------------------------------------------------------------------------------
 
 def convert_to_zone0(x, y, zone):
     if zone == 0:
@@ -295,55 +318,41 @@ def scene0():  #
 
 
 def start_screen():
-    # Set text color
-    glColor3f(1.0, 1.0, 1.0)  # Text color (white)
-
-    # Scale the bitmap font
-    glPushMatrix()
-    glRasterPos2f(-125, 30)  # Position of the text (adjusted)
-    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, b"AREAL")
-    glRasterPos2f(-125, 0)  # Position of the text (adjusted)
-    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, b"ASSAULT")
-    glColor3f(1.0, 0.5, 0.796)
-    glRasterPos2f(-50, -170) 
-    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, b"START!")
-    glPopMatrix()  # Restore the original scale
-
-    # Set color for border (blue)
-    draw_box(500,250,-500,-250, 7)
-    draw_box(550,275,-550,-275, 7)
-    draw_box(140,-140,-140,-185, 5)
-    draw_heart("sky blue", (0, 0))
-    draw_heart("red", (50, 50))
-    draw_heart("pink", (-50, -50))
-    pass
+    display_first_screen()
+    
     
 
 
 def round_screen():
     global round
     glColor3f(1.0, 1.0, 1.0)  # Text color (white)
-
-    # Scale the bitmap font
-    glPushMatrix()
-
-    glColor3f(1.0, 0.5, 0.796)
-    glRasterPos2f(-50, -10) 
-    round_string = "ROUND " + str(round)
-    round_bytes = round_string.encode('utf-8')
-    glutBitmapString(GLUT_BITMAP_TIMES_ROMAN_24, round_bytes)
-    glPopMatrix()  # Restore the original scale
-
-    # Set color for border (blue)
-
+    text = f'ROUND {round}'
+    render_text(text, -100, 32, 72)
     draw_box(550,275,-550,-275, 7)
+    tips = [
+    "Watch out Your foe can deal 20 damage if they hit your weak spot",
+    "Strike true to heal 10 HP when you hit your enemys vulnerability",
+    "Keep an eye on your health you start with 100 HP Dont let it run out",
+    "Health is precious manage HP wisely to survive the battles ahead"]
 
-    pass
+    glColor3f(.93,.5,.93)
+    random_tip = random.choice(tips)
+    render_text(random_tip, -350, -61, 24)
 
 
 def box_screen():
-    # Scene 3 code here
-    pass
+    global box_choose
+    display_box(box_choose)
+    glColor3f(.93,.5,.93)
+    text = 'Player 1 Turn'
+    render_text(text, -491, -290, 48)
+    render_text('Choose your hiding spot', 181, 307, 36)
+    glColor3f(1,1,1)
+    render_text('1', -307, -80, 72)
+    render_text('2', 18, -80, 72)
+    render_text('3', 348, -80, 72)
+    
+    
 
 def canon_screen():
     background_dessert()
@@ -362,7 +371,7 @@ def win_screen():
     pass
 #-----------------------------------------------------------------------------------
 def animate():
-    global current_scene, round, angle, ball,initial_velocity,launched, velocity_x,velocity_y
+    global current_scene, round, angle, ball,initial_velocity,launched, velocity_x,velocity_y,box_choose
     # current_time = time.time()
     # delta_time = current_time - animate.start_time if hasattr(animate, 'start_time') else 0
     # animate.start_time = current_time
@@ -378,6 +387,8 @@ def animate():
             if ball.y <= -350 or ball.x >= 630 or ball.y >= 355:
                 ball.reset()
                 launched= False
+    if current_scene==3:
+        pass
 
 
     # time.sleep(1/60)
@@ -392,7 +403,7 @@ def mouseListener(button, state, x, y):
     if button == GLUT_LEFT_BUTTON and state == GLUT_DOWN:
         c_x, c_y = convert_coordinate(x, y)
         if current_scene== 1:
-            if -140 < c_x < 140 and -185 < c_y < -140:
+            if -135 < c_x < 135 and -123 < c_y < -64:
                 current_scene=2
         if current_scene== 4:
             c_x, c_y = convert_coordinate(x, y)
@@ -406,6 +417,26 @@ def mouseListener(button, state, x, y):
 
     glutPostRedisplay()
 #-----------------------------------------------------------------------------------
+def specialKeyListener(key, x, y):
+    global box_choose,current_scene
+    if key== GLUT_KEY_RIGHT:		
+        if current_scene==3:
+            box_choose += 1
+            if box_choose==4:
+                box_choose=0
+    if key== GLUT_KEY_LEFT:		
+        if current_scene==3:
+            box_choose -= 1
+            if box_choose==0:
+                box_choose=3
+
+    glutPostRedisplay()
+
+def keyboardListener(key, x, y):
+    global current_scene, launched
+    if current_scene==3:
+        if key == b'\r':  
+            current_scene=4
 
 def display():
      #//clear the display
@@ -462,8 +493,8 @@ init()
 glutDisplayFunc(display)	#display callback function
 glutIdleFunc(animate)	#what you want to do in the idle time (when no drawing is occuring)
 glutMouseFunc(mouseListener)
-# glutKeyboardFunc(keyboardListener)
-# glutSpecialFunc(specialKeyListener)
+glutKeyboardFunc(keyboardListener)
+glutSpecialFunc(specialKeyListener)
 # glutMouseFunc(mouseListener)
 
 glutMainLoop()		#The main loop of OpenGL
