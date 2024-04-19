@@ -4,7 +4,6 @@ from OpenGL.GLUT import *
 from OpenGL.GLU import *
 import random
 from math import sin, cos, pi
-from drawing_algo import *
 from scene import *
 import time
 import math
