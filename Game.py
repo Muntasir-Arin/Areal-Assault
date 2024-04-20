@@ -24,7 +24,7 @@ theme = random.choice([1, 2])
 #==================================
 W_Width, W_Height = 1280, 720
 launched = False
-current_scene = 8
+current_scene = 1
 box_choose =1
 
 
