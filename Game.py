@@ -11,11 +11,21 @@ import math
 from first_window import display_first_screen
 from boxes_screen import display_box
 
+
+#scores
+hit=[0,0,0]
+miss=[0,0,0]
+double_hit=[0,0,0]
+health=[100,100,100]
+round = 1
+player=[[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+turn=random.choice([1, 2])
+theme = random.choice([1, 2])
+#==================================
 W_Width, W_Height = 1280, 720
 launched = False
-current_scene = 1
-round = 1
-box_choose =2
+current_scene = 8
+box_choose =1
 
 
 # Constants
@@ -341,54 +351,185 @@ def round_screen():
 
 
 def box_screen():
-    global box_choose
+    global box_choose, turn
     display_box(box_choose)
     glColor3f(.93,.5,.93)
-    text = 'Player 1 Turn'
+    text = f'Player {turn} Turn'
     render_text(text, -491, -290, 48)
     render_text('Choose your hiding spot', 181, 307, 36)
+    text = f'Health {health[turn]}'
+    render_text(text, -487, 307, 36)
     glColor3f(1,1,1)
     render_text('1', -307, -80, 72)
     render_text('2', 18, -80, 72)
     render_text('3', 348, -80, 72)
     
+def win_screen(a):
+    global hit, miss,health,round,player,turn,double_hit
+    draw_box(350,275,-350,-275, 7)
+    glColor3f(.93,.5,.93)
+    text = f'Player {a}'
+    render_text(text, -160, 126, 72)
+    text = f'Wins'
+    render_text(text, -100, 61, 72)
+    text = f'Player 1 Score  {(hit[1]*200-miss[1]*100)}'
+    render_text(text, -150, 0, 36)
+    text = f'Player 2 Score  {(hit[2]*200-miss[2]*100)}'
+    render_text(text, -150, -30, 36)
+    draw_box(78,-165,-107,-165, 50)
+    text = f'PLAY AGAIN'
+    glColor3f(1, 1, 0)
+    render_text(text, -75, -159, 24)
+    
+
     
 
 def canon_screen():
-    background_dessert()
+    if theme==1:
+        background_dessert()
+    elif theme==2:
+        background_night()
     draw_ball()
     draw_cannon()
     draw_chest(40,-250)
     draw_chest(240,-250)
     draw_chest(440,-250)
+    glColor3f(1,1,1)
+    text = f'Player {turn} Turn'
+    render_text(text, -560, 320, 48)
+    text = f'Health {health[turn]}'
+    render_text(text, 390, 320, 36)
 
-def hit_miss_screen(flag):
-    # Scene 3 code here
-    pass
+def hit_screen(flag=True):
+    draw_box(550,275,-550,-275, 7)
+    glColor3f(.93,.5,.93)
+    if flag:  
+        text = f'HIT'
+        render_text(text, -100, 32, 108)
+    else:
+        text = f'MISS'
+        render_text(text, -100, 32, 108)
 
-def win_screen():
-    # Scene 3 code here
-    pass
+
 #-----------------------------------------------------------------------------------
 def animate():
-    global current_scene, round, angle, ball,initial_velocity,launched, velocity_x,velocity_y,box_choose
+    global current_scene, round, angle, ball,initial_velocity,launched, velocity_x,velocity_y,box_choose, turn, player,hit, round,box_choose
     # current_time = time.time()
     # delta_time = current_time - animate.start_time if hasattr(animate, 'start_time') else 0
     # animate.start_time = current_time
 
     if current_scene==2:
-        time.sleep(1)
         current_scene+=1
-    if current_scene==4:
+    elif current_scene==4:
         if launched:
             ball.x += velocity_x * time_step
             ball.y += velocity_y * time_step - 0.3 * gravity * time_step**2
             velocity_y -= gravity * time_step
             if ball.y <= -350 or ball.x >= 630 or ball.y >= 355:
+                health[turn]-=10
                 ball.reset()
+                miss[turn]+=1
                 launched= False
-    if current_scene==3:
-        pass
+                current_scene=6
+            
+            min_x1 = -26 - 15
+            max_x1 = 104 + 15
+            min_y = -306 - 15
+            max_y = -240 + 15
+
+            min_x2 = 180 - 15
+            max_x2 = 303 + 15
+
+            min_x3 = 373 - 15
+            max_x3 = 502 + 15
+
+            # Check if the ball center lies within the adjusted bounding box of the area
+            if  min_y <= ball.y <= max_y:
+                if min_x1 <= ball.x <= max_x1 :
+                    ball.reset()
+                    launched= False
+                    if turn == 1:
+                        if player[2][1]==1:
+                            hit[turn]+=1
+                            health[turn]+=10
+                            health[2]-=30
+                            current_scene=5
+                        elif player[2][1]==0:
+                            miss[turn]+=1
+                            current_scene=6
+                    else:
+                        if player[1][1]==1:
+                            hit[turn]+=1
+                            health[turn]+=10
+                            health[1]-=30
+                            current_scene=5
+                        elif player[1][1]==0:
+                            miss[turn]+=1
+                            current_scene=6
+                    
+
+                elif min_x2 <= ball.x <= max_x2 :
+                    ball.reset()
+                    launched= False
+                    if turn == 1:
+                        if player[2][2]==1:
+                            hit[turn]+=1
+                            health[turn]+=10
+                            health[2]-=30
+                            current_scene=5
+                        elif player[2][2]==0:
+                            miss[turn]+=1
+                            current_scene=6
+                    else:
+                        if player[1][2]==1:
+                            hit[turn]+=1
+                            health[turn]+=10
+                            health[1]-=30
+                            current_scene=5
+                        elif player[1][2]==0:
+                            miss[turn]+=1
+                            current_scene=6
+                    
+                elif min_x3 <= ball.x <= max_x3 :
+                    ball.reset()
+                    launched= False
+                    if turn == 1:
+                        if player[2][3]==1:
+                            hit[turn]+=1
+                            health[turn]+=10
+                            health[2]-=30
+                            current_scene=5
+                        elif player[2][3]==0:
+                            miss[turn]+=1
+                            current_scene=6
+                    else:
+                        if player[1][3]==1:
+                            hit[turn]+=1
+                            health[turn]+=10
+                            health[1]-=30
+                            current_scene=5
+                        elif player[1][3]==0:
+                            miss[turn]+=1
+                            current_scene=6
+                    
+    elif current_scene==5 or current_scene==6:
+        print(f'Player 1 health : {health[1]}')
+        print(f'Player 2 health : {health[2]}')
+        print(f'Player 1 hit : {hit[1]}')
+        print(f'Player 2 hit : {hit[2]}')
+        print(f'Player 1 miss : {miss[1]}')
+        print(f'Player 2 miss : {miss[2]}')
+        if health[1]<=0:
+            current_scene=8
+        elif health[2]<=0:
+            current_scene=7
+        else:
+            current_scene=2
+            round+=1
+            player=[[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+            box_choose = random.choice([1, 2, 3])
+
+
 
 
     # time.sleep(1/60)
@@ -396,7 +537,7 @@ def animate():
 
 
 def mouseListener(button, state, x, y):
-    global current_scene,launched
+    global current_scene,launched,box_choose, turn, player, theme
     if button == GLUT_RIGHT_BUTTON and state == GLUT_DOWN:
         c_x, c_y = convert_coordinate(x, y)
         print(c_x, c_y)
@@ -410,6 +551,34 @@ def mouseListener(button, state, x, y):
             if not launched:
                 find_angle(c_x, c_y)
                 launched=True
+        if current_scene== 3:
+            c_x, c_y = convert_coordinate(x, y)
+            if -361 < c_x < -241 and -160 < c_y < -40:
+                box_choose=1
+            if -34 < c_x < 90 and -160 < c_y < -40:
+                box_choose=2
+            if 297 < c_x < 416 and -160 < c_y < -40:
+                box_choose=3
+            if 506 < c_x < 584 and -303 < c_y < -227:
+                player[turn][box_choose]=1
+                turn = 2 if turn == 1 else 1
+                theme = random.choice([1, 2])
+                current_scene=4
+        if current_scene== 7 or current_scene== 8:
+            if -131 < c_x < 101 and -187 < c_y < -137:
+                #RESET
+                hit=[0,0,0]
+                miss=[0,0,0]
+                double_hit=[0,0,0]
+                health=[100,100,100]
+                round = 1
+                player=[[0,0,0,0],[0,0,0,0],[0,0,0,0]]
+                double_hit=[0,0,0]
+                turn=random.choice([1, 2, 2])
+                current_scene=2
+                
+
+
                 
     
     if button == GLUT_LEFT_BUTTON and state == GLUT_UP:
@@ -418,7 +587,7 @@ def mouseListener(button, state, x, y):
     glutPostRedisplay()
 #-----------------------------------------------------------------------------------
 def specialKeyListener(key, x, y):
-    global box_choose,current_scene
+    global current_scene,launched,box_choose, turn, player
     if key== GLUT_KEY_RIGHT:		
         if current_scene==3:
             box_choose += 1
@@ -433,9 +602,12 @@ def specialKeyListener(key, x, y):
     glutPostRedisplay()
 
 def keyboardListener(key, x, y):
-    global current_scene, launched
+    global current_scene,launched,box_choose, turn, player,theme
     if current_scene==3:
         if key == b'\r':  
+            player[turn][box_choose]=1
+            turn = 2 if turn == 1 else 1
+            theme = random.choice([1, 2])
             current_scene=4
 
 def display():
@@ -464,6 +636,15 @@ def display():
         box_screen()
     elif current_scene == 4:
         canon_screen()
+    elif current_scene == 5:
+        hit_screen()
+    elif current_scene == 6:
+        hit_screen(False)
+    elif current_scene == 7:
+        win_screen(1)
+    elif current_scene == 8:
+        win_screen(2)
+        
 
     glutSwapBuffers()
     
